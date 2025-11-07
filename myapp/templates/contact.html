@@ -9,9 +9,7 @@
     <title>Document</title>
 </head>
 <body>
-    {% if msg %}
-        <b style="color: green;">{{msg}}</b>
-    {% endif %}
+    
     <form name="contact" method="post" action="{% url 'contact' %}">
         {% csrf_token %}
         <table>
@@ -20,7 +18,7 @@
                 <td><input type="text" name="name"></td>
             </tr>
             <tr>
-                <td>email Id : </td>
+                <td>Email Id : </td>
                 <td><input type="text" name="email"></td>
             </tr>
             <tr>
@@ -38,6 +36,9 @@
             </tr>
         </table>
     </form>
+    {% if msg %}
+        <b style="color: green;">{{msg}}</b>
+    {% endif %}
     <hr>
     <h1>Recent Contacts :</h1>
     

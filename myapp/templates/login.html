@@ -9,7 +9,27 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Hello, This is login page.</h1>
+       <form name="login" method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <td>Email Id : </td>
+                <td><input type="text" name="email"></td>
+            </tr>
+             <tr>
+                <td>Password :</td>
+                <td><input type="password" name="password"></td>
+            </tr>
+            <tr>
+                <td colspan="10" align="center" >
+                    <input type="submit" value="LOGIN" class="btn btn-success">
+                </td>
+            </tr>
+        </table>
+    </form>
+    {% if msg %}
+        <b style="color: green;">{{msg}}</b>
+    {% endif %}
 </body>
 </html>
 {% endblock %}
