@@ -1,5 +1,8 @@
 from django.shortcuts import render
 from .models import Contact,User
+from django.core.mail import send_mail
+from django.conf import settings
+import random
 # Create your views here.
 def index(request):
     return render(request,'index.html')
@@ -70,3 +73,93 @@ def logout(request):
     except:
         msg="Logged Out Successfully.."
         return render(request,'login.html',{'msg':msg})
+
+def change_password(request):
+    if request.method=="POST":
+        user=User.objects.get(email=request.session['email'])
+        if user.password==request.POST['old_password']:
+            if request.POST['new_password']==request.POST['cnew_password']:
+                if user.password!=request.POST['new_password']:
+                    user.password=request.POST['new_password']
+                    user.save()
+                    del request.session['email']
+                    del request.session['fname']
+                    msg="Password Change Successfully.."
+                    return render(request,'login.html',{'msg':msg})
+                else:
+                    msg="Your New Password Can't Be From your Old Password"
+                    return render(request,'change-password.html',{'msg':msg})
+            else:
+                msg="Your New Password and Confirm New Password Doesn't Matched"
+                return render(request,'change-password.html',{'msg':msg})
+        else:
+            msg="Old Password Doesn't Matched"
+            return render(request,'change-password.html',{'msg':msg})        
+    else:
+        return render(request,'change-password.html')
+    
+def profile(request):
+    user=User.objects.get(email=request.session['email'])
+    if request.method=='POST':
+        user.fname=request.POST['fname']
+        user.lname=request.POST['lname']
+        user.mobile=request.POST['mobile']
+        user.address=request.POST['address']
+        user.save()
+        msg="Profile Updated Successfully..!"
+        return render(request,'profile.html',{'user':user,'msg':msg})
+    else:
+        return render(request,'profile.html',{'user':user})
+    
+def forgot_password(request):
+    if request.method=="POST":
+        try:
+            user=User.objects.get(email=request.POST['email'])
+            otp=random.randint(1000,9999)
+            context = {}
+            address = request.POST['email']
+            subject = 'OTP for Forgot Password'
+            message = 'Hello, Your OTP for forgot Password is' + str(otp)
+
+            if address and subject and message:
+                try:
+                    send_mail(subject, message, settings.EMAIL_HOST_USER, [address,])
+                    context['result'] = 'Email sent successfully'
+                    request.session['otp']=otp
+                    request.session['email1']=request.POST['email']
+                except Exception as e:
+                    context['result'] = f'Error sending email: {e}'
+            else:
+                context['result'] = 'All fields are required'
+            return render(request, "otp.html", context)
+        except:
+            msg="Email Not Registered"
+            return render(request,'forgot-password.html',{'msg':msg})
+    else:
+        return render(request,'forgot-password.html')
+    
+def verify_otp(request):
+    otp1=int(request.session['otp'])
+    otp2=int(request.POST['otp'])
+
+    if otp1==otp2:
+        del request.session['otp']
+        return render(request,'new-password.html',{'msg':'Please Set your New Password'})
+    else:
+        return render(request,'otp.html',{'msg':'Invalid OTP'})
+    
+def new_password(request):
+    if request.POST['new_password']==request.POST['cnew_password']:
+        user=User.objects.get(email=request.session['email1'])
+        if user.password!=request.POST['new_password']:
+            user.password=request.POST['new_password']
+            user.save()
+            msg="Password Updated Successfully"
+            del request.session['email1']
+            return render(request,'login.html',{'msg':msg})
+        else:
+            msg="Your new Password Can't be From Your Old Password"
+            return render(request,'new-password.html',{'msg':msg})
+    else:
+        msg="Your New Password & Confirm New Password Doesn't Matched"
+        return render(request,'new-password.html',{'msg':msg})
